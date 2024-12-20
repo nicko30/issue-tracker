@@ -1,16 +1,16 @@
 'use strict';
 
-const express     = require('express');
-const bodyParser  = require('body-parser');
-const expect      = require('chai').expect;
-const cors        = require('cors');
-require('dotenv').config();
+var express     = require('express');
+var bodyParser  = require('body-parser');
+var expect      = require('chai').expect;
+var cors        = require('cors');
 
-const apiRoutes         = require('./routes/api.js');
-const fccTestingRoutes  = require('./routes/fcctesting.js');
-const runner            = require('./test-runner');
+var apiRoutes         = require('./routes/api.js');
+var fccTestingRoutes  = require('./routes/fcctesting.js');
+var runner            = require('./test-runner');
+let helmet = require('helmet')
 
-let app = express();
+var app = express();
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -20,6 +20,7 @@ app.use(cors({origin: '*'})); //For FCC testing purposes only
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet.xssFilter())
 
 //Sample front-end
 app.route('/:project/')
@@ -47,16 +48,17 @@ app.use(function(req, res, next) {
 });
 
 //Start our server and tests!
-const listener = app.listen(process.env.PORT || 3000, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
+app.listen(process.env.PORT || 3000, function () {
+  console.log("Listening on port " + process.env.PORT);
   if(process.env.NODE_ENV==='test') {
     console.log('Running Tests...');
     setTimeout(function () {
       try {
         runner.run();
       } catch(e) {
-        console.log('Tests are not valid:');
-        console.error(e);
+        var error = e;
+          console.log('Tests are not valid:');
+          console.log(error);
       }
     }, 3500);
   }
